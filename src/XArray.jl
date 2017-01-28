@@ -1,7 +1,7 @@
 # -*- tab-width:2 -*-
 module XArray
 
-export plot, DataArray
+export DataArray
 
 
 using NetCDF
@@ -9,10 +9,10 @@ using NetCDF
 using Plots
 import Plots.plot
 
-type DataArray{T, M, N} <: AbstractArray{T, N}
+type DataArray{T, N} <: AbstractArray{T, N}
     data::AbstractArray{T, N}
     dims:: Array{Symbol,1}
-    coords::Dict{Symbol, M}
+    coords::Dict{Symbol, Any}
 end
 
 
@@ -20,7 +20,7 @@ end
 # TODO real indexing 
 Base.size(A::DataArray) = size(A.data)
 Base.setindex!(A::DataArray, inds...) = setindex!(A.data, v, inds...)
-Base.getindex(A::DataArray, inds::Int...) = A.data[inds...]
+Base.getindex(A::DataArray, i::Int...) = A.data[i...]
 
 """
 A[1:10, 1:10] style indexing
@@ -55,31 +55,27 @@ function fromnc(fname, varname)
     DataArray(collect(data), dims, coords)
 end
 
-# Recipes for plotting
+# # Recipes for plotting
+#
 
-@recipe function f{T, M}(x::DataArray{T,M,2})
-    # st --> :contourf
-    xlabel --> string(x.dims[1])
-    ylabel --> string(x.dims[2])
 
-    if maximum(x.data) > 0 > minimum(x.data)
-        c --> :bluesreds
+# Two dimensional plot
+@recipe function f{T}(x::DataArray{T, 2})
+
+    @series begin
+
+      seriestype --> :contourf
+      xguide --> string(x.dims[1])
+      yguide --> string(x.dims[2])
+
+      if maximum(x.data) > 0 > minimum(x.data)
+          seriescolor --> :bluesreds
+      end
+
+      dims = [x.coords[s] for s in x.dims]
+      dims[1], dims[2], x.data'
     end
-
-    dims = [x.coords[s] for s in x.dims]
-    dims[1], dims[2], x.data'
 end
-
-# function plot{T, M}(x::DataArray{T, M, 2}; linetype=:contourf, kw...)
-#     dims = [x.coords[s] for s in x.dims]
-#     kw = Dict(kw)
-#     kw[:linetype] = linetype
-
-#     kw[:xlabel] = string(x.dims[1])
-#     kw[:ylabel] = string(x.dims[2])
-
-#     Plots.plot(dims[1], dims[2], x.data'; kw...)
-# end
 
 # function show(io::IO, x::DataArray)
 #     print(io, "DataArray dims=$x.dims")
