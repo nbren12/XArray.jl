@@ -25,11 +25,22 @@ Base.getindex(A::DataArray, i::Int...) = A.data[i...]
 """
 A[1:10, 1:10] style indexing
 """
-function Base.getindex(A::DataArray, inds::Union{UnitRange, Colon, AbstractVector}...)
+function Base.getindex(A::DataArray, inds::Union{UnitRange, Colon, AbstractVector, Int}...)
     data = getindex(A.data, inds...)
     coords = Dict{Symbol, Any}(dim=>A.coords[dim][i] for (dim, i) in zip(A.dims, inds))
-    DataArray(data, A.dims, coords)
+
+    # remove singelton dimensions
+    dims = Symbol[]
+    for (i,dim) in zip(inds,A.dims)
+        if ~isa(i, Int)
+            push!(dims, dim)
+        end
+    end
+
+    DataArray(data, dims, coords)
 end
+
+# TODO Add support for operations
 
 
 

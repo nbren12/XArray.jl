@@ -19,6 +19,8 @@ daz = XArray.fromarr(z, dims, coords)
 # subset array
 @test isa(daz[1:10, 1:10], XArray.DataArray)
 @test isa(daz[1, 1:10], XArray.DataArray)
+@test length(daz[1,1:10].dims) == 1
+@test daz[1,1:10].dims[1] == :time
 
 ## plotting works
 # using Plots
